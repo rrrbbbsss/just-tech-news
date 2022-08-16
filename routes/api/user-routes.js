@@ -49,12 +49,39 @@ router.post('/', (req, res) => {
         });
 });
 
+// POST /api/users/login
+router.post('/login', (req, res) => {
+    // epxects {email: 'basf@asdf.com', passower: 'asdf'}
+    User.findOne({
+        where: {
+            email: req.body.email
+        }
+    })
+    .then(dbUserData => {
+        // Verify user
+        if (!dbUserData) {
+            res.status(400).json({ message: 'No user with that email address!' });
+            return;
+        }
+
+        // Verify password
+        const validPassword = dbUserData.checkPassword(req.body.password);
+        if (!validPassword) {
+            res.status(400).json({ message: 'Incorrect password'});
+            return;
+        }
+
+        res.json({user: dbUserData, message: 'You are now logged in'});
+    });
+});
+
 // PUT /api/users/1
 router.put('/:id', (req, res) => {
     // epxects {username: 'Lernantino', email: 'basf@asdf.com', passower: 'asdf'}
 
     // if req.body has exact key/value pairs to match the model, you can just use `req.body` instead
     User.update(req.body, {
+        individualHooks: true,
         where: {
             id: req.params.id
         }
